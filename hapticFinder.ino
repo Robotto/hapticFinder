@@ -21,7 +21,7 @@
 * Hold on to your butts...
 *
 */
-
+#define PI_NUMERIC 3.14f
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <WiFiClient.h>
@@ -40,7 +40,6 @@ static unsigned int v7=D4;
 static unsigned int v8=D3;
 
 static unsigned int vibrators[NUM_VIBRATORS]={v1,v2,v3,v4,v5,v6,v7,v8};
-
 WiFiUDP Udp;
 const unsigned int localPort = 1337;    // local port to listen for UDP packets
 const int UDP_PACKET_SIZE = 1; //change to whatever you need.
@@ -56,11 +55,14 @@ void configModeCallback (WiFiManager *myWiFiManager) {
   
 void setup()
 {
+  delay(800);
     for(int i=0; i<NUM_VIBRATORS; i++){
         pinMode(vibrators[i],OUTPUT);
         digitalWrite(vibrators[i],LOW);
     }
     
+
+
     WiFi.hostname("HapticFinder");
     
     Serial.begin(115200);
@@ -167,13 +169,183 @@ void handleRoot() {
         if(webserver.arg(0)=="B") back();
         webserver.sendContent("HTTP/1.1 204 No Content\r\n\r\n");
     }
+
+//#define NUM_ROWS_AND_COLUMNS 5
+//#define NUM_MOTORS_IN_ROWS_AND_COLUMNS 5
+//#define NUM_WAVEPOINTS 3
+
+//static unsigned int rows[NUM_ROWS_AND_COLUMNS][NUM_MOTORS_IN_ROWS_AND_COLUMNS]    = {{0,0,v1,0,0},{0,0,v2,0,0},{0,v4,v5,0},{0,0,v7,0,0},{0,0,v8,0,0}};
+//static unsigned int columns[NUM_ROWS_AND_COLUMNS][NUM_MOTORS_IN_ROWS_AND_COLUMNS] = {{0,0,v3,0,0},{0,0,v4,0,0},{0,v2,v7,0},{0,0,v5,0,0},{0,0,v6,0,0}};
+
+//int wave[NUM_WAVEPOINTS] = {0,1,0};
+int switchDelay=100;
+//int amplitude = 250;
+void up(){
+  Serial.println("UP");
+
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+  {
+    //Get sinusoidally offset amplitudes:
+    int amp0=int((float)PWMRANGE*(float)sin(theta));
+    int amp1=int((float)PWMRANGE*(float)sin(theta-0.375));
+    int amp2=int((float)PWMRANGE*(float)sin(theta-0.75));
+    int amp3=int((float)PWMRANGE*(float)sin(theta-1.125));
+    int amp4=int((float)PWMRANGE*(float)sin(theta-1.5));
+    
+    //minmimum value is 0 (if not less than 0)
+    if(!(amp0<0)) analogWrite(v8,amp0);
+    if(!(amp1<0)) analogWrite(v7,amp1);
+    if(!(amp2<0)) {analogWrite(v4,amp2); analogWrite(v5,amp2);}
+    if(!(amp3<0)) analogWrite(v2,amp3);
+    if(!(amp4<0)) analogWrite(v1,amp4);
+    
+    //MY GOD, LOOK AT THAT SERIAL PLOTTER!!! :D
+   // Serial.println(String(amp0) + "," + String(amp1) + "," + String(amp2) + "," + String(amp3) + "," + String(amp4));
+    delay(2);
+  }
+
+  //int amp = sin()
+
+  /*
+ // for(int i = 0;i<2;i++){
+  digitalWrite(v2,HIGH);
+  delay(switchDelay);
+  digitalWrite(v1,HIGH);
+  delay(switchDelay);
+  digitalWrite(v2,LOW);
+  delay(switchDelay);  
+  for(int i=255;i>0;i--) {
+    analogWrite(v1,i);
+    delay(2);
+}  */
+   
+  //digitalWrite(v1,LOW);
+  //delay(switchDelay*2);  
+  //}
+
+/*
+for(int i = 0;i<2;i++){
+  for(int j=NUM_ROWS_AND_COLUMNS-1; j>-1;j--){
+    if(j==2) continue; //skip the center row
+    for(int k = 0 ; k<NUM_MOTORS_IN_ROWS_AND_COLUMNS ; k++) digitalWrite(rows[j][k],HIGH);  
+    delay(switchDelay);
+  }
+
+  for(int j=NUM_ROWS_AND_COLUMNS-1; j>-1;j--){
+    if(j==2) continue; //skip the center row
+    for(int k = 0 ; k<NUM_MOTORS_IN_ROWS_AND_COLUMNS ; k++) digitalWrite(rows[j][k],LOW);  
+    delay(switchDelay);
+  }}
+  */
+
+  }  
+
+void down(){
+
+  Serial.println("DOWN");
+
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+  {
+    //Get sinusoidally offset amplitudes:
+    int amp0=int((float)PWMRANGE*(float)sin(theta));
+    int amp1=int((float)PWMRANGE*(float)sin(theta-0.375));
+    int amp2=int((float)PWMRANGE*(float)sin(theta-0.75));
+    int amp3=int((float)PWMRANGE*(float)sin(theta-1.125));
+    int amp4=int((float)PWMRANGE*(float)sin(theta-1.5)); //1.5rad ~ pi/2
+    //minmimum value is 0 (if not less than 0)
+    if(!(amp0<0)) analogWrite(v1,amp0);
+    if(!(amp1<0)) analogWrite(v2,amp1);
+    if(!(amp2<0)) {analogWrite(v4,amp2); analogWrite(v5,amp2);}
+    if(!(amp3<0)) analogWrite(v7,amp3);
+    if(!(amp4<0)) analogWrite(v8,amp4);
+    delay(2);  
+  }
+
+
+}
+
+void left(){
+  Serial.println("LEFT");
+
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+  {
+    //Get sinusoidally offset amplitudes:
+    int amp0=int((float)PWMRANGE*(float)sin(theta));
+    int amp1=int((float)PWMRANGE*(float)sin(theta-0.375));
+    int amp2=int((float)PWMRANGE*(float)sin(theta-0.75));
+    int amp3=int((float)PWMRANGE*(float)sin(theta-1.125));
+    int amp4=int((float)PWMRANGE*(float)sin(theta-1.5));    
+    //minmimum value is 0 (if not less than 0)
+    if(!(amp0<0)) analogWrite(v3,amp0);
+    if(!(amp1<0)) analogWrite(v4,amp1);
+    if(!(amp2<0)) {analogWrite(v2,amp2); analogWrite(v7,amp2);}
+    if(!(amp3<0)) analogWrite(v5,amp3);
+    if(!(amp4<0)) analogWrite(v6,amp4);
+    delay(2);
+  }
   
-void up(){Serial.println("UP");}  
-void down(){Serial.println("DOWN");}
-void left(){Serial.println("LEFT");}
-void right(){Serial.println("RIGHT");}
-void forward(){Serial.println("FORWARD");}
-void back(){Serial.println("BACK");}  
+  
+}
+void right(){
+  Serial.println("RIGHT");
+
+  
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+  {
+    //Get sinusoidally offset amplitudes:
+    int amp0=int((float)PWMRANGE*(float)sin(theta));
+    int amp1=int((float)PWMRANGE*(float)sin(theta-0.375));
+    int amp2=int((float)PWMRANGE*(float)sin(theta-0.75));
+    int amp3=int((float)PWMRANGE*(float)sin(theta-1.125));
+    int amp4=int((float)PWMRANGE*(float)sin(theta-1.5));
+    //minmimum value is 0 (if not less than 0)
+    if(!(amp0<0)) analogWrite(v6,amp0);
+    if(!(amp1<0)) analogWrite(v5,amp1);
+    if(!(amp2<0)) {analogWrite(v2,amp2); analogWrite(v7,amp2);}
+    if(!(amp3<0)) analogWrite(v4,amp3);
+    if(!(amp4<0)) analogWrite(v3,amp4);
+    delay(2);
+  }
+}
+void forward(){
+  Serial.println("FORWARD");
+
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+  {
+    //Get sinusoidally offset amplitudes:
+    int amp0=int((float)0.5*PWMRANGE*(float)sin(theta));
+    int amp1=int((float)0.5*PWMRANGE*(float)sin(theta-0.5));
+    //minmimum value is 0 (if not less than 0)
+    if(!(amp0<0)) {analogWrite(v1,amp0); analogWrite(v3,amp0); analogWrite(v6,amp0); analogWrite(v8,amp0);} 
+    if(!(amp1<0)) {analogWrite(v2,amp1); analogWrite(v4,amp1); analogWrite(v5,amp1); analogWrite(v7,amp1);}
+    delay(3);
+  }
+
+
+}
+void back(){
+  Serial.println("BACK");
+  
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+  {
+    //Get sinusoidally offset amplitudes:
+    int amp0=int((float)0.5*PWMRANGE*(float)sin(theta));
+    int amp1=int((float)0.5*PWMRANGE*(float)sin(theta-0.5));
+    //minmimum value is 0 (if not less than 0)
+    if(!(amp0<0)) {analogWrite(v1,amp0); analogWrite(v3,amp0); analogWrite(v6,amp0); analogWrite(v8,amp0);} 
+    if(!(amp1<0)) {analogWrite(v2,amp1); analogWrite(v4,amp1); analogWrite(v5,amp1); analogWrite(v7,amp1);}
+    delay(3);
+  }
+
+/*
+Serial.println("testrun:");
+for (int i=0;i<NUM_VIBRATORS;i++) {
+  Serial.println("i: " + String(i));
+  digitalWrite(vibrators[i],HIGH);
+  delay(500);
+  digitalWrite(vibrators[i],LOW);  }
+*/
+}  
   
   void handleNotFound(){
     Serial.println("client getting 404");
@@ -194,8 +366,9 @@ void back(){Serial.println("BACK");}
   void UDPrx()
   {
   // We've received a packet, read the data from it
-      Serial.println("udpRX!");
-      memset(packetBuffer, 0, UDP_PACKET_SIZE); //reset packet buffer
+      //Serial.println("udpRX!");
+      //memset(packetBuffer, 0, UDP_PACKET_SIZE); //reset packet buffer
+      packetBuffer[0]=0;
       int read_bytes=Udp.read(packetBuffer,UDP_PACKET_SIZE);  // read the packet into the buffer
   
       switch(packetBuffer[0])
