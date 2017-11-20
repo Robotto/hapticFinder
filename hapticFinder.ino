@@ -14,9 +14,9 @@
 *
 * ([3]->D6)     ([4]->D7)       ([5]->D2)       ([6]->D1)
 *
-*                       ([7]->D4)
+*                       ([7]->D4)*
 *
-*                       ([8]->D3)
+*                       ([8]->D8)*
 *
 * Hold on to your butts...
 *
@@ -37,7 +37,7 @@ static unsigned int v4=D7;
 static unsigned int v5=D2;
 static unsigned int v6=D1;
 static unsigned int v7=D4;
-static unsigned int v8=D3;
+static unsigned int v8=D8;
 
 static unsigned int vibrators[NUM_VIBRATORS]={v1,v2,v3,v4,v5,v6,v7,v8};
 WiFiUDP Udp;
