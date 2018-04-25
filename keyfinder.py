@@ -14,8 +14,14 @@ fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
 
 UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 remotePort = 1337
-remoteIP = '192.168.1.83'
+remoteIP = '192.168.43.139'
 
+print
+print '     ===== Goodmorning, you sexy hackers!  ====='
+print '     = Use arrow keys to send movement signals ='
+print '     =  (pgup / pgdn to send forward / back)   ='
+print '     ==========================================='
+print
 
 try:
     while 1:

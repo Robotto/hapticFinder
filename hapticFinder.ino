@@ -82,6 +82,16 @@ void setup()
     if (!wifiManager.autoConnect("HapticFinder")) { Serial.println("failed to connect and hit timeout"); ESP.restart(); }
   
     Serial.println("Wifi Up! IPV4: " + WiFi.localIP().toString());
+
+    analogWrite(v8,512);
+    delay(200);
+    digitalWrite(v8,LOW);
+    delay(200);
+    analogWrite(v8,512);
+    delay(200);
+    digitalWrite(v8,LOW);
+
+
     //OTA:
     // ArduinoOTA.setPort(8266);
     // Port defaults to 8266
@@ -183,24 +193,49 @@ int switchDelay=100;
 void up(){
   Serial.println("UP");
 
-  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+  bool dropAmp0=false;
+  bool dropAmp1=false;
+  bool dropAmp2=false;
+  bool dropAmp3=false;
+  bool dropAmp4=false;
+  
+
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.015) //going ~3/4 around the unit circle to account for offset
   {
     //Get sinusoidally offset amplitudes:
     int amp0=int((float)PWMRANGE*(float)sin(theta));
-    int amp1=int((float)PWMRANGE*(float)sin(theta-0.375));
-    int amp2=int((float)PWMRANGE*(float)sin(theta-0.75));
-    int amp3=int((float)PWMRANGE*(float)sin(theta-1.125));
-    int amp4=int((float)PWMRANGE*(float)sin(theta-1.5));
+    int amp1=int((float)PWMRANGE*(float)sin(theta-0.3125));//-0.375));
+    int amp2=int((float)PWMRANGE*(float)sin(theta-0.625));//-0.75));
+    int amp3=int((float)PWMRANGE*(float)sin(theta-0.9375));//1.125));
+    int amp4=int((float)PWMRANGE*(float)sin(theta-1.25));//1.5));
     
-    //minmimum value is 0 (if not less than 0)
-    if(!(amp0<0)) analogWrite(v8,amp0);
-    if(!(amp1<0)) analogWrite(v7,amp1);
-    if(!(amp2<0)) {analogWrite(v4,amp2); analogWrite(v5,amp2);}
-    if(!(amp3<0)) analogWrite(v2,amp3);
-    if(!(amp4<0)) analogWrite(v1,amp4);
+    //nothing less than 0
+    if((amp0<0)) amp0=0;
+    if((amp1<0)) amp1=0;
+    if((amp2<0)) amp2=0;
+    if((amp3<0)) amp3=0;
+    if((amp4<0)) amp4=0;
+    
+    //arm the drops after 'peaking':
+    if(amp0>500 && amp0<amp1) dropAmp0=true;
+    if(amp1>500 && amp1<amp2) dropAmp1=true;
+    if(amp2>500 && amp2<amp3) dropAmp2=true;
+    if(amp3>500 && amp3<amp4) dropAmp3=true;
+    
+    //drop the amplitude after handing peak over to next vibrator:
+    if(dropAmp0) amp0=0;
+    if(dropAmp1) amp1=0;
+    if(dropAmp2) amp2=0;
+    if(dropAmp3) {amp3=0; theta+=0.015;} //shorter decay on the backside
+
+    analogWrite(v8,amp0);
+    analogWrite(v7,amp1);
+    analogWrite(v4,amp2/2); analogWrite(v5,amp2/2);
+    analogWrite(v2,amp3);
+    analogWrite(v1,amp4);
     
     //MY GOD, LOOK AT THAT SERIAL PLOTTER!!! :D
-   // Serial.println(String(amp0) + "," + String(amp1) + "," + String(amp2) + "," + String(amp3) + "," + String(amp4));
+    //Serial.println(String(amp0) + "," + String(amp1) + "," + String(amp2) + "," + String(amp3) + "," + String(amp4));
     delay(2);
   }
 
@@ -243,21 +278,46 @@ for(int i = 0;i<2;i++){
 void down(){
 
   Serial.println("DOWN");
+  bool dropAmp0=false;
+  bool dropAmp1=false;
+  bool dropAmp2=false;
+  bool dropAmp3=false;
+  bool dropAmp4=false;
+  
 
-  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.015) //going ~3/4 around the unit circle to account for offset
   {
     //Get sinusoidally offset amplitudes:
     int amp0=int((float)PWMRANGE*(float)sin(theta));
-    int amp1=int((float)PWMRANGE*(float)sin(theta-0.375));
-    int amp2=int((float)PWMRANGE*(float)sin(theta-0.75));
-    int amp3=int((float)PWMRANGE*(float)sin(theta-1.125));
-    int amp4=int((float)PWMRANGE*(float)sin(theta-1.5)); //1.5rad ~ pi/2
+    int amp1=int((float)PWMRANGE*(float)sin(theta-0.3125));//-0.375));
+    int amp2=int((float)PWMRANGE*(float)sin(theta-0.625));//-0.75));
+    int amp3=int((float)PWMRANGE*(float)sin(theta-0.9375));//1.125));
+    int amp4=int((float)PWMRANGE*(float)sin(theta-1.25));//1.5));
+    
+    //nothing less than 0
+    if((amp0<0)) amp0=0;
+    if((amp1<0)) amp1=0;
+    if((amp2<0)) amp2=0;
+    if((amp3<0)) amp3=0;
+    if((amp4<0)) amp4=0;
+    
+    //arm the drops after 'peaking':
+    if(amp0>500 && amp0<amp1) dropAmp0=true;
+    if(amp1>500 && amp1<amp2) dropAmp1=true;
+    if(amp2>500 && amp2<amp3) dropAmp2=true;
+    if(amp3>500 && amp3<amp4) dropAmp3=true;
+    
+    //drop the amplitude after handing peak over to next vibrator:
+    if(dropAmp0) amp0=0;
+    if(dropAmp1) amp1=0;
+    if(dropAmp2) amp2=0;
+    if(dropAmp3) {amp3=0; theta+=0.015;} //shorter decay on the backside
     //minmimum value is 0 (if not less than 0)
-    if(!(amp0<0)) analogWrite(v1,amp0);
-    if(!(amp1<0)) analogWrite(v2,amp1);
-    if(!(amp2<0)) {analogWrite(v4,amp2); analogWrite(v5,amp2);}
-    if(!(amp3<0)) analogWrite(v7,amp3);
-    if(!(amp4<0)) analogWrite(v8,amp4);
+    analogWrite(v1,amp0);
+    analogWrite(v2,amp1);
+    analogWrite(v4,amp2); analogWrite(v5,amp2);
+    analogWrite(v7,amp3);
+    analogWrite(v8,amp4);
     delay(2);  
   }
 
@@ -266,21 +326,45 @@ void down(){
 
 void left(){
   Serial.println("LEFT");
+  bool dropAmp0=false;
+  bool dropAmp1=false;
+  bool dropAmp2=false;
+  bool dropAmp3=false;
+  bool dropAmp4=false;
+  
 
-  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.015) //going ~3/4 around the unit circle to account for offset
   {
     //Get sinusoidally offset amplitudes:
     int amp0=int((float)PWMRANGE*(float)sin(theta));
-    int amp1=int((float)PWMRANGE*(float)sin(theta-0.375));
-    int amp2=int((float)PWMRANGE*(float)sin(theta-0.75));
-    int amp3=int((float)PWMRANGE*(float)sin(theta-1.125));
-    int amp4=int((float)PWMRANGE*(float)sin(theta-1.5));    
-    //minmimum value is 0 (if not less than 0)
-    if(!(amp0<0)) analogWrite(v3,amp0);
-    if(!(amp1<0)) analogWrite(v4,amp1);
-    if(!(amp2<0)) {analogWrite(v2,amp2); analogWrite(v7,amp2);}
-    if(!(amp3<0)) analogWrite(v5,amp3);
-    if(!(amp4<0)) analogWrite(v6,amp4);
+    int amp1=int((float)PWMRANGE*(float)sin(theta-0.3125));//-0.375));
+    int amp2=int((float)PWMRANGE*(float)sin(theta-0.625));//-0.75));
+    int amp3=int((float)PWMRANGE*(float)sin(theta-0.9375));//1.125));
+    int amp4=int((float)PWMRANGE*(float)sin(theta-1.25));//1.5));
+    
+    //nothing less than 0
+    if((amp0<0)) amp0=0;
+    if((amp1<0)) amp1=0;
+    if((amp2<0)) amp2=0;
+    if((amp3<0)) amp3=0;
+    if((amp4<0)) amp4=0;
+    
+    //arm the drops after 'peaking':
+    if(amp0>500 && amp0<amp1) dropAmp0=true;
+    if(amp1>500 && amp1<amp2) dropAmp1=true;
+    if(amp2>500 && amp2<amp3) dropAmp2=true;
+    if(amp3>500 && amp3<amp4) dropAmp3=true;
+    
+    //drop the amplitude after handing peak over to next vibrator:
+    if(dropAmp0) amp0=0;
+    if(dropAmp1) amp1=0;
+    if(dropAmp2) amp2=0;
+    if(dropAmp3) {amp3=0; theta+=0.015;} //shorter decay on the backside
+    analogWrite(v3,amp0);
+    analogWrite(v4,amp1);
+    analogWrite(v2,amp2); analogWrite(v7,amp2);
+    analogWrite(v5,amp3);
+    analogWrite(v6,amp4);
     delay(2);
   }
   
@@ -289,35 +373,70 @@ void left(){
 void right(){
   Serial.println("RIGHT");
 
+  bool dropAmp0=false;
+  bool dropAmp1=false;
+  bool dropAmp2=false;
+  bool dropAmp3=false;
+  bool dropAmp4=false;
   
-  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.015) //going ~3/4 around the unit circle to account for offset
   {
     //Get sinusoidally offset amplitudes:
     int amp0=int((float)PWMRANGE*(float)sin(theta));
-    int amp1=int((float)PWMRANGE*(float)sin(theta-0.375));
-    int amp2=int((float)PWMRANGE*(float)sin(theta-0.75));
-    int amp3=int((float)PWMRANGE*(float)sin(theta-1.125));
-    int amp4=int((float)PWMRANGE*(float)sin(theta-1.5));
+    int amp1=int((float)PWMRANGE*(float)sin(theta-0.3125));//-0.375));
+    int amp2=int((float)PWMRANGE*(float)sin(theta-0.625));//-0.75));
+    int amp3=int((float)PWMRANGE*(float)sin(theta-0.9375));//1.125));
+    int amp4=int((float)PWMRANGE*(float)sin(theta-1.25));//1.5));
+    
+    //nothing less than 0
+    if((amp0<0)) amp0=0;
+    if((amp1<0)) amp1=0;
+    if((amp2<0)) amp2=0;
+    if((amp3<0)) amp3=0;
+    if((amp4<0)) amp4=0;
+    
+    //arm the drops after 'peaking':
+    if(amp0>500 && amp0<amp1) dropAmp0=true;
+    if(amp1>500 && amp1<amp2) dropAmp1=true;
+    if(amp2>500 && amp2<amp3) dropAmp2=true;
+    if(amp3>500 && amp3<amp4) dropAmp3=true;
+    
+    //drop the amplitude after handing peak over to next vibrator:
+    if(dropAmp0) amp0=0;
+    if(dropAmp1) amp1=0;
+    if(dropAmp2) amp2=0;
+    if(dropAmp3) {amp3=0; theta+=0.015;} //shorter decay on the backside
     //minmimum value is 0 (if not less than 0)
-    if(!(amp0<0)) analogWrite(v6,amp0);
-    if(!(amp1<0)) analogWrite(v5,amp1);
-    if(!(amp2<0)) {analogWrite(v2,amp2); analogWrite(v7,amp2);}
-    if(!(amp3<0)) analogWrite(v4,amp3);
-    if(!(amp4<0)) analogWrite(v3,amp4);
+    analogWrite(v6,amp0);
+    analogWrite(v5,amp1);
+    analogWrite(v2,amp2); analogWrite(v7,amp2);
+    analogWrite(v4,amp3);
+    analogWrite(v3,amp4);
     delay(2);
   }
 }
 void forward(){
   Serial.println("FORWARD");
+  bool dropAmp0=false;
 
-  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
+  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.015) //going ~3/4 around the unit circle to account for offset
   {
     //Get sinusoidally offset amplitudes:
-    int amp0=int((float)0.5*PWMRANGE*(float)sin(theta));
-    int amp1=int((float)0.5*PWMRANGE*(float)sin(theta-0.5));
-    //minmimum value is 0 (if not less than 0)
-    if(!(amp0<0)) {analogWrite(v1,amp0); analogWrite(v3,amp0); analogWrite(v6,amp0); analogWrite(v8,amp0);} 
-    if(!(amp1<0)) {analogWrite(v2,amp1); analogWrite(v4,amp1); analogWrite(v5,amp1); analogWrite(v7,amp1);}
+    int amp0=int((float)PWMRANGE*(float)sin(theta));
+    int amp1=int((float)PWMRANGE*(float)sin(theta-0.5));//-0.375));
+    
+    //nothing less than 0
+    if((amp0<0)) amp0=0;
+    if((amp1<0)) amp1=0;
+
+    //arm the drops after 'peaking':
+    if(amp0>500 && amp0<amp1) dropAmp0=true;
+    
+    //drop the amplitude after handing peak over to next vibrator:
+    if(dropAmp0) {amp0=0; theta+=0.015;} //shorter decay on the backside
+    analogWrite(v1,amp0); analogWrite(v3,amp0); analogWrite(v6,amp0); analogWrite(v8,amp0);
+    analogWrite(v2,amp1); analogWrite(v4,amp1); analogWrite(v5,amp1); analogWrite(v7,amp1);
     delay(3);
   }
 
@@ -325,15 +444,25 @@ void forward(){
 }
 void back(){
   Serial.println("BACK");
+  bool dropAmp0=false;
   
-  for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.01) //going ~3/4 around the unit circle to account for offset
-  {
-    //Get sinusoidally offset amplitudes:
-    int amp0=int((float)0.5*PWMRANGE*(float)sin(theta));
-    int amp1=int((float)0.5*PWMRANGE*(float)sin(theta-0.5));
-    //minmimum value is 0 (if not less than 0)
-    if(!(amp0<0)) {analogWrite(v1,amp0); analogWrite(v3,amp0); analogWrite(v6,amp0); analogWrite(v8,amp0);} 
-    if(!(amp1<0)) {analogWrite(v2,amp1); analogWrite(v4,amp1); analogWrite(v5,amp1); analogWrite(v7,amp1);}
+    for(float theta=0;theta<1.5*PI_NUMERIC;theta+=0.015) //going ~3/4 around the unit circle to account for offset
+    {
+      //Get sinusoidally offset amplitudes:
+      int amp0=int((float)PWMRANGE*(float)sin(theta));
+      int amp1=int((float)PWMRANGE*(float)sin(theta-0.5));//-0.375));
+      
+      //nothing less than 0
+      if((amp0<0)) amp0=0;
+      if((amp1<0)) amp1=0;
+  
+      //arm the drops after 'peaking':
+      if(amp0>500 && amp0<amp1) dropAmp0=true;
+      
+      //drop the amplitude after handing peak over to next vibrator:
+      if(dropAmp0) {amp0=0; theta+=0.015;} //shorter decay on the backside
+    analogWrite(v1,amp0); analogWrite(v3,amp0); analogWrite(v6,amp0); analogWrite(v8,amp0);
+    analogWrite(v2,amp1); analogWrite(v4,amp1); analogWrite(v5,amp1); analogWrite(v7,amp1);
     delay(3);
   }
 
